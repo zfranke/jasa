@@ -1,4 +1,4 @@
-use fasa;
+use jasa;
 
 -- Create user table
 CREATE TABLE IF NOT EXISTS user (
@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS user (
 -- Create the 'results' table for storing survey responses
 CREATE TABLE IF NOT EXISTS results (
     result_id INT AUTO_INCREMENT PRIMARY KEY,
-    survey_id INT NOT NULL,
-    choice ENUM('happy', 'medium', 'angry') NOT NULL,
     response_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    survey_id INT NOT NULL,
+    choice ENUM('happy', 'neutral', 'angry') NOT NULL,
     FOREIGN KEY (survey_id) REFERENCES surveys(survey_id)
 );
