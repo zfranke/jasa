@@ -67,6 +67,19 @@ app.get('/', (req, res) => {
     res.send('JASA: API is running');
 });
 
+//Ping database route
+app.get('/pingdb', (req, res) => {
+    pool.query('SELECT 1 + 1 AS solution', (err, result) => {
+        if (err) {
+            console.log(err);
+            res.status(500).send('JASA: Error pinging database');
+        } else {
+            res.status(200).json(result);
+        }
+    });
+});
+
+
 //Register route
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
@@ -112,5 +125,77 @@ app.post('/login', async (req, res) => {
 });
 
 //Get all users route
+app.get('/users', authenticateToken, (req, res) => {
+    pool.query('SELECT * FROM users', (err, result) => {
+        if (err) {
+            console.log(err);
+            res.status(500).send('JASA: Error getting users');
+        } else {
+            res.status(200).json(result);
+        }
+    });
+});
+
+//Get results route
+app.get('/results', authenticateToken, async (req, res) => {
+  // Implement code to retrieve survey results here
+  // You can filter by survey_id and date range as needed
+    // You can also implement pagination if you want
+    const { survey_id, start_date, end_date } = req.query;
+    let query = 'SELECT * FROM results';
+    let conditions = [];
+    let values = [];
+
+    if (survey_id) {
+        conditions.push('survey_id = ?');
+        values.push(survey_id);
+    }
+
+    if (start_date) {
+        conditions.push('created_at >= ?');
+        values.push(start_date);
+    }
+
+    if (end_date) {
+        conditions.push('created_at <= ?');
+        values.push(end_date);
+    }
+
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    pool.query(query, values, (err, result) => {
+        if (err) {
+            console.log(err);
+            res.status(500).send('JASA: Error getting results');
+        } else {
+            res.status(200).json(result);
+        }
+    }
+    );
+});
+
+//Post a result route (no auth)
+app.post('/results', async (req, res) => {
+  const { survey_id, choice } = req.body;
+
+  try {
+    await pool.query('INSERT INTO results (survey_id, choice) VALUES (?, ?)', [
+      survey_id,
+      choice,
+    ]);
+    res.status(201).json({ message: 'Survey result submitted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+//Start server
+app.listen(port, () => {
+    console.log(`JASA: Server listening on port ${port}`);
+});
+
 
 
